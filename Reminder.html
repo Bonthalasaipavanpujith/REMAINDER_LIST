@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reminder with Notifications</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #ffe259, #ffa751);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 50px;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #ffa751;
+      outline: none;
+    }
+
+    input[type="text"], input[type="date"], input[type="time"] {
+      flex: 1 1 100%;
+    }
+
+    button {
+      background-color: #fbc531;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #f39c12;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: #f0f0f0;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      transition: 0.2s;
+    }
+
+    li.checked {
+      text-decoration: line-through;
+      color: #888;
+      background: #dfe6e9;
+    }
+
+    .reminder-text {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reminder-time {
+      font-size: 14px;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    .delete-btn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .clear-all {
+      margin-top: 15px;
+      width: 100%;
+      background: #d63031;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🔔 Reminder with Notifications</h2>
+  <div class="input-group">
+    <input type="text" id="reminderInput" placeholder="Enter your reminder">
+    <input type="date" id="dateInput">
+    <input type="time" id="timeInput">
+    <button onclick="addReminder()">Add Reminder</button>
+  </div>
+  <ul id="reminderList"></ul>
+  <button class="clear-all" onclick="clearAll()">Clear All</button>
+</div>
+
+<script>
+  const reminders = [];
+
+  // Ask permission for notifications
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+
+  function addReminder() {
+    const text = document.getElementById("reminderInput").value.trim();
+    const date = document.getElementById("dateInput").value;
+    const time = document.getElementById("timeInput").value;
+
+    if (!text || !date || !time) {
+      alert("Please enter reminder, date and time.");
+      return;
+    }
+
+    const reminderDateTime = new Date(`${date}T${time}`);
+    const now = new Date();
+
+    if (reminderDateTime < now) {
+      alert("Cannot set a reminder in the past.");
+      return;
+    }
+
+    const li = document.createElement("li");
+    li.classList.add("reminder");
+
+    const textDiv = document.createElement("div");
+    textDiv.classList.add("reminder-text");
+    textDiv.innerHTML = `<span>${text}</span>`;
+
+    const delBtn = document.createElement("button");
+    delBtn.classList.add("delete-btn");
+    delBtn.textContent = "Delete";
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      const index = reminders.findIndex(r => r.li === li);
+      if (index !== -1) reminders.splice(index, 1);
+      li.remove();
+    };
+
+    textDiv.appendChild(delBtn);
+    li.appendChild(textDiv);
+
+    const timeDiv = document.createElement("div");
+    timeDiv.classList.add("reminder-time");
+    timeDiv.textContent = `⏰ ${reminderDateTime.toLocaleString()}`;
+    li.appendChild(timeDiv);
+
+    li.addEventListener("click", () => li.classList.toggle("checked"));
+
+    document.getElementById("reminderList").appendChild(li);
+
+    reminders.push({ text, time: reminderDateTime, notified: false, li });
+
+    // Clear inputs
+    document.getElementById("reminderInput").value = "";
+    document.getElementById("dateInput").value = "";
+    document.getElementById("timeInput").value = "";
+  }
+
+  function clearAll() {
+    document.getElementById("reminderList").innerHTML = "";
+    reminders.length = 0;
+  }
+
+  // Check every 30s for due reminders
+  setInterval(() => {
+    const now = new Date();
+    reminders.forEach(reminder => {
+      if (!reminder.notified && reminder.time <= now) {
+        if (Notification.permission === "granted") {
+          new Notification("🔔 Reminder Alert", {
+            body: reminder.text,
+            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png"
+          });
+        } else {
+          alert("Reminder: " + reminder.text);
+        }
+        reminder.notified = true;
+      }
+    });
+  }, 30000); // Check every 30 seconds
+</script>
+
+</body>
+</html>
