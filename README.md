@@ -2,7 +2,7 @@
 A simple and elegant web-based reminder list that allows users to create, manage, and receive time-based notifications for their tasks. Built using HTML, CSS, and JavaScript, this app utilizes the Web Notifications API to alert users when their reminders are due.
 
 ## 🌟 Features
-✅ Add reminders with custom date and time
+✅ Add reminders with custom date and time.
 
 ⏰ Built-in notification alerts (even if the browser is minimized)
 
